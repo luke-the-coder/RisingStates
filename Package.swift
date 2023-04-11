@@ -33,9 +33,15 @@ let package = Package(
             appCategory: .strategyGames
         )
     ],
+    dependencies: [
+        .package(url: "https://github.com/crashoverride777/swifty-sk-scroll-view", "2.0.0"..<"3.0.0")
+    ],
     targets: [
         .executableTarget(
             name: "AppModule",
+            dependencies: [
+                .product(name: "SwiftySKScrollView", package: "swifty-sk-scroll-view")
+            ],
             path: "."
         )
     ]

@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "swifty-sk-scroll-view",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/crashoverride777/swifty-sk-scroll-view",
+      "state" : {
+        "revision" : "498c51060b96d6648842972eb57e46e9d252914c",
+        "version" : "2.5.0"
+      }
+    }
+  ],
+  "version" : 2
+}
