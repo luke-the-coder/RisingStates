@@ -134,6 +134,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 blur.removeAllChildren()
                 rectangle.removeAllChildren()
                 rectangle.removeFromParent()
+                blur.removeFromParent()
             }
         }
     }
@@ -189,7 +190,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
 
         blur = SKShapeNode(rectOf: CGSize(width: frame.midX*2, height: frame.midY*2))
-        blur.alpha = CGFloat(0.05)
+        blur.alpha = CGFloat(0.8)
         blur.fillColor = .gray
         blur.position = CGPoint(x: 0, y: 0)
         blur.zPosition = 10
