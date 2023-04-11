@@ -23,6 +23,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var pauseButton = SKSpriteNode()
     var timeLabel = SKLabelNode()
     
+    // Spawn rate for random events
+    var lastTime:TimeInterval = 0
+    var timeSinceRandomEvent :TimeInterval = 0
+    var spawnRateRandomEvents : TimeInterval = 60
+    var randomEvent = SKNode()
+    var blur = SKShapeNode(), rectangle = SKShapeNode()
+    
     override func didMove(to view: SKView) {
         SaveManager.loadGameState(scene: GameScene(size: self.view!.bounds.size))
         self.view?.isMultipleTouchEnabled = true
@@ -47,27 +54,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         displayTime()
         displayBudget()
+    
         self.camera = cam
 
         
         pollutionBar.position = CGPoint(x: -frame.width/2 + pollutionBar.barSize.width/2 + 100, y: frame.height/2 - pollutionBar.barSize.height/2 - 10)
-
-
-//        let publicOpinionBar = ProgressBar(barSize: CGSize(width: 200, height: 10), barColor: .blue, backgroundColor: .gray, progress: score2)
-//        publicOpinionBar.position = CGPoint(x: -frame.width/2 + publicOpinionBar.barSize.width/2 + 130, y: frame.height/2 - publicOpinionBar.barSize.height/2 - 40)
-//        publicOpinionBar.zPosition = 10
         addChild(pollutionBar)
-//        addChild(publicOpinionBar)
         
         
         pauseOrStop()
-        
-        let constructionButton = SKSpriteNode(imageNamed: "constructionButton")
+        let Image = UIImage(systemName: "hammer.circle.fill")
+        let Texture = SKTexture(image: Image!)
+
+        let constructionButton = SKSpriteNode(texture: Texture)
         // Build the construction button:
-        constructionButton.size = CGSize(width: 100, height: 80)
+        constructionButton.size = CGSize(width: 100, height: 100)
         // Name the start node for touch detection:
+        constructionButton.anchorPoint = CGPoint(x: 0, y: 0)
         constructionButton.name = "constructionButton"
-        constructionButton.position = CGPoint(x: -400, y: -350)
+        constructionButton.position = CGPoint(x: -frame.midX + constructionButton.size.width/2, y: -frame.midY + constructionButton.size.height/2)
         //startButton.zRotation = CGFloat.pi / 2
         self.addChild(constructionButton)
         
@@ -78,7 +83,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if(currentlyGoing){
             let Image = UIImage(systemName: "pause.circle")
             let Texture = SKTexture(image: Image!)
-            let Sprite = SKSpriteNode(texture: Texture)
             pauseButton = SKSpriteNode(texture: Texture)
         } else {
             let image = UIImage(systemName: "play.circle")
@@ -102,6 +106,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let location = touch.location(in: self)
             // Locate the node at this location:
             let nodeTouched = atPoint(location)
+            print(nodeTouched)
             if nodeTouched.name == "constructionButton" {
                 SaveManager.saveGameState(scene: self)
                 timer.invalidate()
@@ -125,6 +130,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     pauseOrStop()
                 }
             }
+            else if nodeTouched.name == "readEvent" {
+                blur.removeAllChildren()
+                rectangle.removeAllChildren()
+                rectangle.removeFromParent()
+            }
         }
     }
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {}
@@ -133,6 +143,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func update(_ currentTime: TimeInterval) {
 //        pollutionBar.updateBar(newValue: CGFloat(1))
+        checkRandomEvent(currentTime - lastTime)
+        lastTime = currentTime
     }
     func displayBudget(){
         let budgetLabel = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
@@ -167,15 +179,46 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         timer.fire()
     }
     
-    // Called by the progress bar to update score1
-        func updateScore1(newScore: CGFloat) {
-            score1 = newScore
-        }
+    func checkRandomEvent(_ frameRate:TimeInterval) {
         
-        // Called by the progress bar to update score2
-        func updateScore2(newScore: CGFloat) {
-            score2 = newScore
+        // add time to timer
+        timeSinceRandomEvent += frameRate
+        // return if it hasn't been enough time to fire laser
+        if (timeSinceRandomEvent < spawnRateRandomEvents) {
+            return
         }
+
+        blur = SKShapeNode(rectOf: CGSize(width: frame.midX*2, height: frame.midY*2))
+        blur.alpha = CGFloat(0.05)
+        blur.fillColor = .gray
+        blur.position = CGPoint(x: 0, y: 0)
+        blur.zPosition = 10
+        addChild(blur)
+
+
+        
+        // DO A RANDOM EVENT HERE
+        rectangle = SKShapeNode(rectOf: CGSize(width: frame.width/2, height: frame.height/2))
+        rectangle.fillColor = .gray
+        rectangle.position = CGPoint(x: 0, y: 0)
+        rectangle.zPosition = 11
+        addChild(rectangle)
+        
+        let Image = UIImage(systemName: "checkmark.rectangle")
+        let Texture = SKTexture(image: Image!)
+        let confirmButton = SKSpriteNode(texture: Texture)
+        confirmButton.zPosition = 12
+        // Build the construction button:
+        confirmButton.size = CGSize(width: 100, height: 100)
+        // Name the start node for touch detection:
+        confirmButton.anchorPoint = CGPoint(x: 0, y: 0)
+        confirmButton.name = "readEvent"
+        confirmButton.position = CGPoint(x: rectangle.position.x  - frame.midX/12, y: rectangle.position.y - frame.midY/3)
+        //startButton.zRotation = CGFloat.pi / 2
+        rectangle.addChild(confirmButton)
+        
+        timeSinceRandomEvent = 0
+    }
     
 }
 
