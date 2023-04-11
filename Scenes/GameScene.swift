@@ -11,13 +11,14 @@ import SwiftUI
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
-    var score1: CGFloat = 2
-    var score2: CGFloat = 0.85
+    var score1: CGFloat = 0.2
+    var score2: CGFloat = 2
     var budgetText : String = ""
     var time: TimeInterval = 7
     var timer = Timer()
     lazy var pollutionBar = ProgressBar(barSize: CGSize(width: 200, height: 20), backgroundColor: .gray, progress: score1, imageName: "pollutionProgressBar")
-
+    lazy var socialImpactBar = ProgressBar(barSize: CGSize(width: 200, height: 20), backgroundColor: .gray, progress: score2, imageName: "socialImpactProgessBar")
+    
     var currentlyGoing : Bool = true
     let cam = SKCameraNode()
     var pauseButton = SKSpriteNode()
@@ -60,7 +61,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         pollutionBar.position = CGPoint(x: -frame.width/2 + pollutionBar.barSize.width/2 + 100, y: frame.height/2 - pollutionBar.barSize.height/2 - 10)
         addChild(pollutionBar)
-        
+        socialImpactBar.position = CGPoint(x: -frame.width/2 + socialImpactBar.barSize.width/2 + 100, y: frame.height/2 - socialImpactBar.barSize.height/2 - 50)
+        addChild(socialImpactBar)
         
         pauseOrStop()
         let Image = UIImage(systemName: "hammer.circle.fill")

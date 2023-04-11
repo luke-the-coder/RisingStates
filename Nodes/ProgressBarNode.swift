@@ -39,7 +39,7 @@ class ProgressBar: SKNode {
     
     private func createProgressBar(){
         // Create the progress bar sprite node
-        progressBar = SKSpriteNode(imageNamed: "pollutionProgressBar1")
+        progressBar = SKSpriteNode(imageNamed: imageName)
         progressBar.size = self.barSize
         progressBar.position = CGPoint(x: 0, y: 0)
         progressBar.anchorPoint = CGPoint(x: 0, y: 0.5)
