@@ -29,7 +29,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var spawnRateRandomEvents : TimeInterval = 60
     var randomEvent = SKNode()
     var blur = SKShapeNode(), rectangle = SKShapeNode()
-    
+    var firstEvent : Bool = true
     override func didMove(to view: SKView) {
         SaveManager.loadGameState(scene: GameScene(size: self.view!.bounds.size))
         self.view?.isMultipleTouchEnabled = true
@@ -213,11 +213,29 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // Name the start node for touch detection:
         confirmButton.anchorPoint = CGPoint(x: 0, y: 0)
         confirmButton.name = "readEvent"
-        confirmButton.position = CGPoint(x: rectangle.position.x  - frame.midX/12, y: rectangle.position.y - frame.midY/3)
+        confirmButton.position = CGPoint(x: rectangle.position.x  - frame.midX/12, y: rectangle.position.y - frame.midY/2 + 10)
         //startButton.zRotation = CGFloat.pi / 2
         rectangle.addChild(confirmButton)
+        if (firstEvent){
+            let eventNode = SKSpriteNode(imageNamed: "randomEvent1")
+            eventNode.position = CGPoint(x: 0, y: 0)
+//            eventNode.size = CGSize(width: rectangle.frame.size.width, height: rectangle.frame.size.height)
+            rectangle.addChild(eventNode)
+            events.remove(at: 0)
+        } else {
+            if let event = events.randomElement() {
+                // Create a node to display the event
+                let eventNode = SKSpriteNode(imageNamed: event.imageName)
+                eventNode.position = CGPoint(x: 0, y: 0)
+                eventNode.zPosition = 11
+                eventNode.size = CGSize(width: frame.width/2, height: frame.height/2)
+                rectangle.addChild(eventNode)
+            }
+        }
+
         
         timeSinceRandomEvent = 0
+        firstEvent = false
     }
     
 }
