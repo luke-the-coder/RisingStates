@@ -7,18 +7,22 @@
 
 import Foundation
 import SpriteKit
+import SwiftUI
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var score1: CGFloat = 2
     var score2: CGFloat = 0.85
+    var budgetText : String = ""
     var time: TimeInterval = 7
     var timer = Timer()
     lazy var pollutionBar = ProgressBar(barSize: CGSize(width: 200, height: 20), backgroundColor: .gray, progress: score1, imageName: "pollutionProgressBar")
 
-    
+    var currentlyGoing : Bool = true
     let cam = SKCameraNode()
-
+    var pauseButton = SKSpriteNode()
+    var timeLabel = SKLabelNode()
+    
     override func didMove(to view: SKView) {
         SaveManager.loadGameState(scene: GameScene(size: self.view!.bounds.size))
         self.view?.isMultipleTouchEnabled = true
@@ -42,7 +46,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(backgroundNode)
 
         displayTime()
-
+        displayBudget()
         self.camera = cam
 
         
@@ -56,7 +60,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 //        addChild(publicOpinionBar)
         
         
-        
+        pauseOrStop()
         
         let constructionButton = SKSpriteNode(imageNamed: "constructionButton")
         // Build the construction button:
@@ -67,17 +71,28 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         //startButton.zRotation = CGFloat.pi / 2
         self.addChild(constructionButton)
         
+
+    }
+    func pauseOrStop(){
         
-        let pauseButton = SKSpriteNode(imageNamed: "pauseButton")
-        // Build the construction button:
+        if(currentlyGoing){
+            let Image = UIImage(systemName: "pause.circle")
+            let Texture = SKTexture(image: Image!)
+            let Sprite = SKSpriteNode(texture: Texture)
+            pauseButton = SKSpriteNode(texture: Texture)
+        } else {
+            let image = UIImage(systemName: "play.circle")
+            let Texture = SKTexture(image: image!)
+            pauseButton.removeFromParent()
+            pauseButton = SKSpriteNode(texture: Texture)
+        }
         pauseButton.size = CGSize(width: 50, height: 50)
         // Name the start node for touch detection:
         pauseButton.name = "pauseButton"
         pauseButton.position = CGPoint(x: frame.midX - pauseButton.frame.width*2/3, y: frame.midY - pauseButton.frame.height*2/3)
-        //startButton.zRotation = CGFloat.pi / 2
         self.addChild(pauseButton)
+
     }
-    
     func touchDown(atPoint pos : CGPoint) {}
     func touchMoved(toPoint pos : CGPoint) {}
     func touchUp(atPoint pos : CGPoint) {}
@@ -88,17 +103,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             // Locate the node at this location:
             let nodeTouched = atPoint(location)
             if nodeTouched.name == "constructionButton" {
-                SaveManager.saveGameState(scene: GameScene(size: self.view!.bounds.size))
+                SaveManager.saveGameState(scene: self)
                 timer.invalidate()
                 self.view?.presentScene(ConstructionScene(size: self.size), transition: SKTransition.fade(withDuration: 0.8))
                 let seconds = 0.8
                 DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
                     self.removeAllChildren()
                 }
-                
             }
             else if nodeTouched.name == "pauseButton" {
-                
+                if(currentlyGoing){
+                    timer.invalidate()
+                    currentlyGoing.toggle()
+                    pauseButton.removeFromParent()
+                    pauseOrStop()
+                } else {
+                    currentlyGoing.toggle()
+                    timeLabel.removeFromParent()
+                    displayTime()
+                    pauseButton.removeFromParent()
+                    pauseOrStop()
+                }
             }
         }
     }
@@ -109,10 +134,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func update(_ currentTime: TimeInterval) {
 //        pollutionBar.updateBar(newValue: CGFloat(1))
     }
-    
+    func displayBudget(){
+        let budgetLabel = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
+        budgetLabel.fontSize = 20
+        budgetLabel.fontColor = .white
+        budgetLabel.position = CGPoint(x: frame.midX - 150, y: frame.midY - 30)
+        addChild(budgetLabel)
+        budgetLabel.text = "Budget: 100M"
+    }
     func displayTime() {
         
-        let timeLabel = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
+        timeLabel = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
         var timeOfDay: String {
             let hours = Int(self.time) % 24
             return String(format: "%02d:00", hours)
@@ -120,7 +152,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
         timeLabel.fontSize = 20 
         timeLabel.fontColor = .white
-        timeLabel.position = CGPoint(x: frame.midX - frame.self.width/12, y: frame.midY - frame.self.height/20)
+        timeLabel.position = CGPoint(x: frame.midX - frame.self.width/12, y: frame.midY - frame.self.height/18)
         addChild(timeLabel)
         
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timers in
@@ -129,7 +161,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                    return
                }
                self.time += 1
-               timeLabel.text = timeOfDay
+            self.timeLabel.text = timeOfDay
            }
         timer.tolerance = 0.1
         timer.fire()
