@@ -18,24 +18,21 @@ class ConstructionScene: SKScene, SKPhysicsContactDelegate {
         
         let backgroundSprite = SKSpriteNode(imageNamed: "constructionScene")
         backgroundSprite.size = CGSize(width: frame.width, height: frame.height)
-        backgroundSprite.position = CGPoint(x: frame.midX, y: frame.midY)
+        backgroundSprite.position = .zero
         backgroundSprite.zPosition = -100
-        backgroundSprite.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+        backgroundSprite.anchorPoint = .zero
+        
         backgroundNode.addChild(backgroundSprite)
         addChild(backgroundNode)
-
-        let constructionButton = SKSpriteNode(imageNamed: "constructionButton")
+        let Image = UIImage(systemName: "arrowshape.turn.up.backward.circle")
+        let Texture = SKTexture(image: Image!)
+        let constructionButton = SKSpriteNode(texture: Texture) // SKSpriteNode(imageNamed: "constructionButton")
         // Build the construction button:
-        constructionButton.size = CGSize(width: 100, height: 80)
+        constructionButton.size = CGSize(width: 100, height: 100)
         // Name the start node for touch detection:
         constructionButton.name = "constructionButton"
-        constructionButton.position = CGPoint(x: 80, y: 750)
-        //startButton.zRotation = CGFloat.pi / 2
+        constructionButton.position = CGPoint(x: constructionButton.size.width, y: frame.height - constructionButton.size.height)
         self.addChild(constructionButton)
-        
-        
-        
-        
 
         setupHorizontalMenu()
         
@@ -47,11 +44,18 @@ class ConstructionScene: SKScene, SKPhysicsContactDelegate {
             let location = touch.location(in: self)
             // Locate the node at this location:
             let nodeTouched = atPoint(location)
+            print(nodeTouched)
+
             if nodeTouched.name == "constructionButton" {
                 // Player touched the start text or button node
                 // Switch to an instance of the GameScene:
                 deleteScrollView(from: view!)
                 self.view?.presentScene(GameScene(size: self.size))
+            }
+            for cardName in cards {
+                if (cardName.name == nodeTouched.name){
+                    print(cardName.name)
+                }
             }
         }
     }
@@ -60,36 +64,21 @@ class ConstructionScene: SKScene, SKPhysicsContactDelegate {
         scrollView = nil // nil out reference to deallocate properly
     }
     
+    
     func setupHorizontalMenu(){
-
-        scrollView = SwiftySKScrollView(frame: CGRect(x: -frame.midX, y: 0, width: size.width, height: size.height), moveableNode: moveableNode, direction: .horizontal)
-        scrollView?.contentSize = CGSize(width: scrollView!.frame.width * 3, height: scrollView!.frame.height) // * 3 makes it three times as wide
+        scrollView = SwiftySKScrollView(frame: CGRect(x: 0, y: 0, width: size.width, height: size.height), moveableNode: moveableNode, direction: .horizontal)
+        scrollView?.contentSize = CGSize(width: scrollView!.frame.width*3, height: scrollView!.frame.height) // * 3 makes it three times as wide
         view?.addSubview(scrollView!)
         scrollView?.setContentOffset(CGPoint(x: 0 + scrollView!.frame.width * 2, y: 0), animated: true)
-        moveableNode.scene?.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-        moveableNode.position = CGPoint(x: -frame.midX, y: frame.midY/2)
-
-        /// Test sprites page 1
-        let sprite1 = SKSpriteNode(color: .red, size: CGSize(width: 50, height: frame.midY/3))
-        sprite1.position = CGPoint(x: -frame.midX*4+size.width/10, y: 0)
-        moveableNode.addChild(sprite1)
-                
-        /// Test sprites page 2
-        let sprite2 = SKSpriteNode(color: .red, size: CGSize(width: 50, height: frame.midY/3))
-        sprite2.position = CGPoint(x: -frame.midX*4+size.width/10*2, y: 0)
-        moveableNode.addChild(sprite2)
-                
-        let sprite3 = SKSpriteNode(color: .red, size: CGSize(width: 50, height: frame.midY/3))
-        sprite3.position = CGPoint(x: -frame.midX*4+size.width/10*3, y: 0)
-        moveableNode.addChild(sprite3)
-        
-        let sprite4 = SKSpriteNode(color: .red, size: CGSize(width: 50, height: frame.midY/3))
-        sprite4.position = CGPoint(x: -frame.midX*4+size.width/10*4, y: 0)
-        moveableNode.addChild(sprite4)
-    
-        let sprite5 = SKSpriteNode(color: .red, size: CGSize(width: 50, height: frame.midY/3))
-        sprite5.position = CGPoint(x: -frame.midX*4+size.width/10*5, y: 0)
-        moveableNode.addChild(sprite5)
+        moveableNode.position = CGPoint(x: 0, y: scrollView!.frame.height / 2)
+        var i = -8
+        for card in cards {
+            let cardNode = SKSpriteNode(imageNamed: card.imageName)
+            cardNode.name = card.name
+            cardNode.position = CGPoint(x: cardNode.size.width * CGFloat(i) , y: -60)
+            i += 1
+            moveableNode.addChild(cardNode)
+        }
         
         addChild(moveableNode)
 

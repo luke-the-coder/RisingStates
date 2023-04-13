@@ -13,7 +13,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var score1: CGFloat = 0.2
     var score2: CGFloat = 2
-    var budgetText : String = ""
+    var budget : Int = 100
     var time: TimeInterval = 7
     var timer = Timer()
     lazy var pollutionBar = ProgressBar(barSize: CGSize(width: 200, height: 20), backgroundColor: .gray, progress: score1, imageName: "pollutionProgressBar")
@@ -31,6 +31,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var randomEvent = SKNode()
     var blur = SKShapeNode(), rectangle = SKShapeNode()
     var firstEvent : Bool = true
+    
     override func didMove(to view: SKView) {
         SaveManager.loadGameState(scene: GameScene(size: self.view!.bounds.size))
         self.view?.isMultipleTouchEnabled = true
@@ -52,7 +53,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         backgroundNode.addChild(topHudSprite)
         
         addChild(backgroundNode)
-
         displayTime()
         displayBudget()
     
@@ -67,7 +67,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         pauseOrStop()
         let Image = UIImage(systemName: "hammer.circle.fill")
         let Texture = SKTexture(image: Image!)
-
+        Texture.filteringMode = .linear
         let constructionButton = SKSpriteNode(texture: Texture)
         // Build the construction button:
         constructionButton.size = CGSize(width: 100, height: 100)
@@ -80,6 +80,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
 
     }
+    
     func pauseOrStop(){
         
         if(currentlyGoing){
@@ -99,6 +100,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.addChild(pauseButton)
 
     }
+    
     func touchDown(atPoint pos : CGPoint) {}
     func touchMoved(toPoint pos : CGPoint) {}
     func touchUp(atPoint pos : CGPoint) {}
@@ -148,14 +150,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 //        pollutionBar.updateBar(newValue: CGFloat(1))
         checkRandomEvent(currentTime - lastTime)
         lastTime = currentTime
+        
     }
+    
     func displayBudget(){
         let budgetLabel = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
         budgetLabel.fontSize = 20
         budgetLabel.fontColor = .white
         budgetLabel.position = CGPoint(x: frame.midX - 150, y: frame.midY - 30)
         addChild(budgetLabel)
-        budgetLabel.text = "Budget: 100M"
+        budgetLabel.text = "Budget: " + String(budget) + "M"
     }
     func displayTime() {
         
@@ -190,7 +194,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if (timeSinceRandomEvent < spawnRateRandomEvents) {
             return
         }
-
+        
         blur = SKShapeNode(rectOf: CGSize(width: frame.midX*2, height: frame.midY*2))
         blur.alpha = CGFloat(0.8)
         blur.fillColor = .gray
@@ -209,10 +213,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         let Image = UIImage(systemName: "checkmark.rectangle")
         let Texture = SKTexture(image: Image!)
+        Texture.filteringMode = .linear
         let confirmButton = SKSpriteNode(texture: Texture)
         confirmButton.zPosition = 12
         // Build the construction button:
-        confirmButton.size = CGSize(width: 100, height: 100)
+        confirmButton.size = CGSize(width: 120, height: 100)
         // Name the start node for touch detection:
         confirmButton.anchorPoint = CGPoint(x: 0, y: 0)
         confirmButton.name = "readEvent"

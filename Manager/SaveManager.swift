@@ -11,7 +11,8 @@ class SaveManager {
         defaults.set(scene.time, forKey: "time")
         defaults.set(scene.score1, forKey: "score1")
         defaults.set(scene.score2, forKey: "score2")
-
+        defaults.set(scene.currentlyGoing, forKey: "currentlyGoing")
+        defaults.set(scene.budget, forKey: "budget")
 //        defaults.set(scene.score1, forKey: "score1")
 
 //        if let playerPosition = scene.playerNode?.position {
@@ -27,7 +28,8 @@ class SaveManager {
         scene.time = defaults.double(forKey: "time")
         scene.score1 = defaults.double(forKey: "score1")
         scene.score2 = defaults.double(forKey: "score2")
-
+        scene.currentlyGoing = defaults.bool(forKey: "currentlyGoing")
+        scene.budget = defaults.integer(forKey: "budget")
 //        scene.score1 = defaults.float (forKey: "score1")
 
 //        if let positionData = defaults.object(forKey: "playerPosition") as? Data,
