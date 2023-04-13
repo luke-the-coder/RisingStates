@@ -10,21 +10,23 @@ import SpriteKit
 
 class ProgressBar: SKNode {
     var barSize: CGSize
-    var backgroundColor: UIColor
     var progress: CGFloat
     var imageName : String
-    init(barSize: CGSize, backgroundColor: UIColor, progress: CGFloat, imageName : String) {
+    var title : String
+    init(barSize: CGSize, progress: CGFloat, imageName : String, title: String) {
         self.barSize = barSize
-        self.backgroundColor = backgroundColor
         self.imageName = imageName
         self.progress = progress
+        self.title = title
         super.init()
-        
         createProgressBar()
     }
+    
     let cropNode = SKCropNode()
     var maskNode = SKSpriteNode()
     var progressBar = SKSpriteNode()
+    var progressBarLabel = SKLabelNode()
+    
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -55,6 +57,16 @@ class ProgressBar: SKNode {
         maskNode = SKSpriteNode(color: SKColor.white, size: barSize)
         maskNode.xScale = progress
         cropNode.maskNode = maskNode
+        
+        progressBarLabel = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
+        progressBarLabel.fontSize = 20
+        progressBarLabel.fontColor = .black
+        progressBarLabel.text = title
+        progressBarLabel.horizontalAlignmentMode = .left
+        progressBarLabel.verticalAlignmentMode = .center
+        progressBarLabel.position = CGPoint(x: -frame.midX - 140 , y: 3)
+        self.addChild(progressBarLabel)
+
         self.addChild(cropNode)
 
     }

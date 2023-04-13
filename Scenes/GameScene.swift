@@ -10,14 +10,14 @@ import SpriteKit
 import SwiftUI
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
-    
-    var score1: CGFloat = 0.2
+    var stateName : String = "ITALY"
+    var score1: CGFloat = 0.1
     var score2: CGFloat = 2
     var budget : Int = 100
     var time: TimeInterval = 7
     var timer = Timer()
-    lazy var pollutionBar = ProgressBar(barSize: CGSize(width: 200, height: 20), backgroundColor: .gray, progress: score1, imageName: "pollutionProgressBar")
-    lazy var socialImpactBar = ProgressBar(barSize: CGSize(width: 200, height: 20), backgroundColor: .gray, progress: score2, imageName: "socialImpactProgessBar")
+    lazy var pollutionBar = ProgressBar(barSize: CGSize(width: 200, height: 20), progress: score1, imageName: "pollutionProgressBar", title: "Pollution: ")
+    lazy var socialImpactBar = ProgressBar(barSize: CGSize(width: 200, height: 20), progress: score2, imageName: "socialImpactProgessBar", title: "Social impact: ")
     
     var currentlyGoing : Bool = true
     let cam = SKCameraNode()
@@ -27,7 +27,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // Spawn rate for random events
     var eventHappening : Bool = false
     var lastTime:TimeInterval = 0.1
-    var timeSinceRandomEvent :TimeInterval = 0
+    var timeSinceRandomEvent :  TimeInterval = 0
     var spawnRateRandomEvents : TimeInterval = 60
     var randomEvent = SKNode()
     var blur = SKShapeNode(), rectangle = SKShapeNode()
@@ -35,8 +35,28 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func didMove(to view: SKView) {
         SaveManager.loadGameState(scene: GameScene(size: self.view!.bounds.size))
         self.view?.isMultipleTouchEnabled = true
+        spawnBackground()
+        displayTime()
+        displayBudget()
         
-        //background
+        self.camera = cam
+        
+        
+        pollutionBar.position = CGPoint(x: -frame.midX + pollutionBar.barSize.width - 20, y: frame.midY - pollutionBar.barSize.height/2 - 40)
+        socialImpactBar.position = CGPoint(x: -frame.midX + socialImpactBar.barSize.width - 20, y: frame.midY - socialImpactBar.barSize.height/2 - 10)
+        addChild(pollutionBar)
+        addChild(socialImpactBar)
+        
+        pauseOrStop()
+        
+        
+        checkConstruction()
+        if events.first(where: { $0.name == "Introduction" }) != nil {
+            intro()
+        }
+    }
+    //background
+    func spawnBackground(){
         let backgroundNode = SKNode()
         
         let backgroundSprite = SKSpriteNode(imageNamed: "backgroundItaly")
@@ -46,42 +66,34 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         backgroundSprite.anchorPoint = CGPoint(x: 0.5, y: 0.5)
         backgroundNode.addChild(backgroundSprite)
         
-        let topHudSprite = SKSpriteNode(imageNamed: "topHud")
-        topHudSprite.size = CGSizeMake(self.frame.size.width, self.frame.size.height)
-        topHudSprite.position = CGPoint(x: 0, y: 0)
-        topHudSprite.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+        let topHudSprite = SKSpriteNode(imageNamed: "topHud2")
+        topHudSprite.size = CGSizeMake(self.frame.size.width, 80)
+        topHudSprite.position = CGPoint(x: 0, y: self.frame.midY - topHudSprite.size.height/2)
+        topHudSprite.zPosition = -99
+        let stateNameLabel = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
+        stateNameLabel.fontSize = 75
+        stateNameLabel.fontColor = .black
+        stateNameLabel.text = stateName
+        stateNameLabel.horizontalAlignmentMode = .left
+        stateNameLabel.verticalAlignmentMode = .center
+        stateNameLabel.position = CGPoint(x: -stateNameLabel.frame.width/2 , y: frame.midY - stateNameLabel.frame.height/2 - 10)
+        backgroundNode.addChild(stateNameLabel)
         backgroundNode.addChild(topHudSprite)
         
-        addChild(backgroundNode)
-        displayTime()
-        displayBudget()
+        let configuration = UIImage.SymbolConfiguration(font: UIFont.systemFont(ofSize: 100))
         
-        self.camera = cam
-        
-        
-        pollutionBar.position = CGPoint(x: -frame.width/2 + pollutionBar.barSize.width/2 + 100, y: frame.height/2 - pollutionBar.barSize.height/2 - 10)
-        addChild(pollutionBar)
-        socialImpactBar.position = CGPoint(x: -frame.width/2 + socialImpactBar.barSize.width/2 + 100, y: frame.height/2 - socialImpactBar.barSize.height/2 - 50)
-        addChild(socialImpactBar)
-        
-        pauseOrStop()
-        let Image = UIImage(systemName: "hammer.circle.fill")
-        let Texture = SKTexture(image: Image!)
+        let image = UIImage(systemName: "hammer.circle.fill", withConfiguration: configuration)
+        image?.withTintColor(.gray)
+        let Texture = SKTexture(image: image!)
         Texture.filteringMode = .linear
         let constructionButton = SKSpriteNode(texture: Texture)
-        // Build the construction button:
         constructionButton.size = CGSize(width: 100, height: 100)
-        // Name the start node for touch detection:
         constructionButton.anchorPoint = CGPoint(x: 0, y: 0)
         constructionButton.name = "constructionButton"
         constructionButton.position = CGPoint(x: -frame.midX + constructionButton.size.width/2, y: -frame.midY + constructionButton.size.height/2)
-        //startButton.zRotation = CGFloat.pi / 2
-        self.addChild(constructionButton)
+        backgroundNode.addChild(constructionButton)
         
-        checkConstruction()
-        if events.first(where: { $0.name == "Introduction" }) != nil {
-            intro()
-        }
+        addChild(backgroundNode)
     }
     
     func pauseOrStop(){
@@ -165,7 +177,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func displayBudget(){
         let budgetLabel = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
         budgetLabel.fontSize = 20
-        budgetLabel.fontColor = .white
+        budgetLabel.fontColor = .black
         budgetLabel.position = CGPoint(x: frame.midX - 150, y: frame.midY - 30)
         addChild(budgetLabel)
         budgetLabel.text = "Budget: " + String(budget) + "M"
@@ -173,13 +185,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func displayTime() {
         timeLabel = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
         var timeOfDay: String {
-            let hours = Int(self.time) % 24
-            return String(format: "%02d:00", hours)
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy/MM/dd"
+            let date = dateFormatter.date(from: "2023/04/13")!
+            let newDate = Calendar.current.date(byAdding: .day, value: Int(self.time), to: date)!
+            return dateFormatter.string(from: newDate)
         }
         
         timeLabel.fontSize = 20
-        timeLabel.fontColor = .white
-        timeLabel.position = CGPoint(x: frame.midX - frame.self.width/12, y: frame.midY - frame.self.height/18)
+        timeLabel.fontColor = .black
+        timeLabel.position = CGPoint(x: frame.midX - 140, y: frame.midY - frame.self.height/18)
         addChild(timeLabel)
         
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timers in
@@ -193,6 +208,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         timer.tolerance = 0.1
         timer.fire()
     }
+
+
     func checkConstruction() {
         for i in 0..<cards.count {
             if (cards[i].selected){
@@ -235,7 +252,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         rectangle.zPosition = 11
         addChild(rectangle)
         
-        let Image = UIImage(systemName: "checkmark.rectangle")
+        let configuration = UIImage.SymbolConfiguration(font: UIFont.systemFont(ofSize: 200))
+
+        let Image = UIImage(systemName: "checkmark.rectangle", withConfiguration: configuration)
         let Texture = SKTexture(image: Image!)
         Texture.filteringMode = .linear
         let confirmButton = SKSpriteNode(texture: Texture)
