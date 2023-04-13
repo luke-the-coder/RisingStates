@@ -49,20 +49,25 @@ class ConstructionScene: SKScene, SKPhysicsContactDelegate {
             if nodeTouched.name == "constructionButton" {
                 // Player touched the start text or button node
                 // Switch to an instance of the GameScene:
-                deleteScrollView(from: view!)
-                self.view?.presentScene(GameScene(size: self.size))
+//                deleteScrollView(from: view!)
+                self.view?.presentScene(GameScene(size: self.size), transition: .fade(withDuration: 0.5))
             }
-            for cardName in cards {
-                if (cardName.name == nodeTouched.name){
-                    print(cardName.name)
+            for i in 0..<cards.count {
+                if (cards[i].name == nodeTouched.name){
+                    cards[i].selected = true
                 }
             }
         }
     }
-    func deleteScrollView(from view: SKView) {
+    override func willMove(from view: SKView) {
         scrollView?.removeFromSuperview()
         scrollView = nil // nil out reference to deallocate properly
     }
+    
+//    func deleteScrollView(from view: SKView) {
+//        scrollView?.removeFromSuperview()
+//        scrollView = nil // nil out reference to deallocate properly
+//    }
     
     
     func setupHorizontalMenu(){

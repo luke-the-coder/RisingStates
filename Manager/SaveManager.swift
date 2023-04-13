@@ -5,7 +5,7 @@
 //  Created by luke-the-coder on 10/04/23.
 //
 import Foundation
-class SaveManager {
+class SaveManager {    
     static func saveGameState(scene: GameScene) {
         let defaults = UserDefaults.standard
         defaults.set(scene.time, forKey: "time")
@@ -13,12 +13,7 @@ class SaveManager {
         defaults.set(scene.score2, forKey: "score2")
         defaults.set(scene.currentlyGoing, forKey: "currentlyGoing")
         defaults.set(scene.budget, forKey: "budget")
-//        defaults.set(scene.score1, forKey: "score1")
 
-//        if let playerPosition = scene.playerNode?.position {
-//            let positionData = NSKeyedArchiver.archivedData(withRootObject: playerPosition)
-//            defaults.set(positionData, forKey: "playerPosition")
-//        }
 
         defaults.synchronize()
     }
@@ -30,11 +25,7 @@ class SaveManager {
         scene.score2 = defaults.double(forKey: "score2")
         scene.currentlyGoing = defaults.bool(forKey: "currentlyGoing")
         scene.budget = defaults.integer(forKey: "budget")
-//        scene.score1 = defaults.float (forKey: "score1")
 
-//        if let positionData = defaults.object(forKey: "playerPosition") as? Data,
-//           let playerPosition = NSKeyedUnarchiver.unarchiveObject(with: positionData) as? CGPoint {
-//            scene.playerNode?.position = playerPosition
-//        }
+        
     }
 }

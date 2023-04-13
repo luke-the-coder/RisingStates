@@ -25,17 +25,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var timeLabel = SKLabelNode()
     
     // Spawn rate for random events
-    var lastTime:TimeInterval = 0
+    var eventHappening : Bool = false
+    var lastTime:TimeInterval = 0.1
     var timeSinceRandomEvent :TimeInterval = 0
     var spawnRateRandomEvents : TimeInterval = 60
     var randomEvent = SKNode()
     var blur = SKShapeNode(), rectangle = SKShapeNode()
-    var firstEvent : Bool = true
     
     override func didMove(to view: SKView) {
         SaveManager.loadGameState(scene: GameScene(size: self.view!.bounds.size))
         self.view?.isMultipleTouchEnabled = true
-
+        
         //background
         let backgroundNode = SKNode()
         
@@ -55,9 +55,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(backgroundNode)
         displayTime()
         displayBudget()
-    
+        
         self.camera = cam
-
+        
         
         pollutionBar.position = CGPoint(x: -frame.width/2 + pollutionBar.barSize.width/2 + 100, y: frame.height/2 - pollutionBar.barSize.height/2 - 10)
         addChild(pollutionBar)
@@ -78,7 +78,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         //startButton.zRotation = CGFloat.pi / 2
         self.addChild(constructionButton)
         
-
+        checkConstruction()
+        if events.first(where: { $0.name == "Introduction" }) != nil {
+            intro()
+        }
     }
     
     func pauseOrStop(){
@@ -98,7 +101,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         pauseButton.name = "pauseButton"
         pauseButton.position = CGPoint(x: frame.midX - pauseButton.frame.width*2/3, y: frame.midY - pauseButton.frame.height*2/3)
         self.addChild(pauseButton)
-
+        
     }
     
     func touchDown(atPoint pos : CGPoint) {}
@@ -112,7 +115,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let nodeTouched = atPoint(location)
             print(nodeTouched)
             if nodeTouched.name == "constructionButton" {
-                SaveManager.saveGameState(scene: self)
+                SaveManager.saveGameState(scene: GameScene(size: self.view!.bounds.size))
                 timer.invalidate()
                 self.view?.presentScene(ConstructionScene(size: self.size), transition: SKTransition.fade(withDuration: 0.8))
                 let seconds = 0.8
@@ -139,6 +142,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 rectangle.removeAllChildren()
                 rectangle.removeFromParent()
                 blur.removeFromParent()
+                eventHappening = false
             }
         }
     }
@@ -146,9 +150,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {}
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {}
     
+    var isFirstUpdate = true
     override func update(_ currentTime: TimeInterval) {
-//        pollutionBar.updateBar(newValue: CGFloat(1))
-        checkRandomEvent(currentTime - lastTime)
+
+        if !isFirstUpdate {
+            checkRandomEvent(currentTime - lastTime)
+        } else {
+            isFirstUpdate = false
+        }
         lastTime = currentTime
         
     }
@@ -162,47 +171,62 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         budgetLabel.text = "Budget: " + String(budget) + "M"
     }
     func displayTime() {
-        
         timeLabel = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
         var timeOfDay: String {
             let hours = Int(self.time) % 24
             return String(format: "%02d:00", hours)
         }
-    
-        timeLabel.fontSize = 20 
+        
+        timeLabel.fontSize = 20
         timeLabel.fontColor = .white
         timeLabel.position = CGPoint(x: frame.midX - frame.self.width/12, y: frame.midY - frame.self.height/18)
         addChild(timeLabel)
         
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timers in
-               guard let self = self else {
-                   timers.invalidate()
-                   return
-               }
-               self.time += 1
+            guard let self = self else {
+                timers.invalidate()
+                return
+            }
+            self.time += 1
             self.timeLabel.text = timeOfDay
-           }
+        }
         timer.tolerance = 0.1
         timer.fire()
     }
-    
+    func checkConstruction() {
+        for i in 0..<cards.count {
+            if (cards[i].selected){
+                if (!cards[i].changedStats){
+                    pollutionBar.updateBarAddition(addend: cards[i].pollutionStats)
+                    socialImpactBar.updateBarAddition(addend: cards[i].socialImpact)
+                    cards[i].changedStats = true
+                }
+                let buildingNode = SKSpriteNode(imageNamed: cards[i].spawningName)
+                buildingNode.position = cards[i].position
+                buildingNode.size = CGSize(width: 50, height: 50)
+                addChild(buildingNode)
+                cards[i].spawned = true
+            }
+        }
+    }
     func checkRandomEvent(_ frameRate:TimeInterval) {
-        
+
         // add time to timer
         timeSinceRandomEvent += frameRate
         // return if it hasn't been enough time to fire laser
-        if (timeSinceRandomEvent < spawnRateRandomEvents) {
+        if (timeSinceRandomEvent < spawnRateRandomEvents || eventHappening) {
             return
         }
-        
+        print("TEST")
+        eventHappening = true
         blur = SKShapeNode(rectOf: CGSize(width: frame.midX*2, height: frame.midY*2))
         blur.alpha = CGFloat(0.8)
         blur.fillColor = .gray
         blur.position = CGPoint(x: 0, y: 0)
         blur.zPosition = 10
         addChild(blur)
-
-
+        
+        
         
         // DO A RANDOM EVENT HERE
         rectangle = SKShapeNode(rectOf: CGSize(width: frame.width/2, height: frame.height/2))
@@ -224,27 +248,59 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         confirmButton.position = CGPoint(x: rectangle.position.x  - frame.midX/12, y: rectangle.position.y - frame.midY/2 + 10)
         //startButton.zRotation = CGFloat.pi / 2
         rectangle.addChild(confirmButton)
-        if (firstEvent){
-            let eventNode = SKSpriteNode(imageNamed: "randomEvent1")
+        if let event = events.randomElement() {
+            // Create a node to display the event
+            let eventNode = SKSpriteNode(imageNamed: event.imageName)
             eventNode.position = CGPoint(x: 0, y: 0)
-//            eventNode.size = CGSize(width: rectangle.frame.size.width, height: rectangle.frame.size.height)
+            eventNode.zPosition = 11
+            eventNode.size = CGSize(width: frame.width/2, height: frame.height/2)
             rectangle.addChild(eventNode)
-            events.remove(at: 0)
-        } else {
-            if let event = events.randomElement() {
-                // Create a node to display the event
-                let eventNode = SKSpriteNode(imageNamed: event.imageName)
-                eventNode.position = CGPoint(x: 0, y: 0)
-                eventNode.zPosition = 11
-                eventNode.size = CGSize(width: frame.width/2, height: frame.height/2)
-                rectangle.addChild(eventNode)
-            }
+            
         }
-
+        
         
         timeSinceRandomEvent = 0
-        firstEvent = false
     }
     
+    func intro(){
+        blur = SKShapeNode(rectOf: CGSize(width: frame.midX*2, height: frame.midY*2))
+        blur.alpha = CGFloat(0.8)
+        blur.fillColor = .gray
+        blur.position = CGPoint(x: 0, y: 0)
+        blur.zPosition = 10
+        addChild(blur)
+        
+        
+        
+        // DO A RANDOM EVENT HERE
+        rectangle = SKShapeNode(rectOf: CGSize(width: frame.width/2, height: frame.height/2))
+        rectangle.fillColor = .gray
+        rectangle.position = CGPoint(x: 0, y: 0)
+        rectangle.zPosition = 11
+        addChild(rectangle)
+        
+        let Image = UIImage(systemName: "checkmark.rectangle")
+        let Texture = SKTexture(image: Image!)
+        Texture.filteringMode = .linear
+        let confirmButton = SKSpriteNode(texture: Texture)
+        confirmButton.zPosition = 12
+        // Build the construction button:
+        confirmButton.size = CGSize(width: 120, height: 100)
+        // Name the start node for touch detection:
+        confirmButton.anchorPoint = CGPoint(x: 0, y: 0)
+        confirmButton.name = "readEvent"
+        confirmButton.position = CGPoint(x: rectangle.position.x  - frame.midX/12, y: rectangle.position.y - frame.midY/2 + 10)
+        //startButton.zRotation = CGFloat.pi / 2
+        rectangle.addChild(confirmButton)
+        let eventNode = SKSpriteNode(imageNamed: "randomEvent1")
+        eventNode.position = CGPoint(x: 0, y: 0)
+        //            eventNode.size = CGSize(width: rectangle.frame.size.width, height: rectangle.frame.size.height)
+        rectangle.addChild(eventNode)
+        if(!events.isEmpty){
+            events.remove(at: 0)
+        }
+    }
 }
+    
+
 

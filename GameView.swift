@@ -10,6 +10,6 @@ struct GameView: View {
     }
     
     var body: some View {
-        SpriteView(scene: self.menu, debugOptions: .showsPhysics).ignoresSafeArea().statusBar(hidden: true)
+        SpriteView(scene: self.menu, debugOptions: .showsNodeCount).ignoresSafeArea().statusBar(hidden: true)
     }
 }
