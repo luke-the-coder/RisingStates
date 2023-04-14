@@ -9,6 +9,9 @@ import Foundation
 import SpriteKit
 import SwiftUI
 
+
+
+
 class GameScene: SKScene, SKPhysicsContactDelegate {
     var stateName : String = "ITALY"
     var score1: CGFloat = 0.1
@@ -33,7 +36,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var blur = SKShapeNode(), rectangle = SKShapeNode()
     
     override func didMove(to view: SKView) {
-        SaveManager.loadGameState(scene: GameScene(size: self.view!.bounds.size))
+        if(SaveManager.isSaveDataAvailable()){
+            SaveManager.loadGameState(scene: self)
+        }
+        pollutionBar.updateBar(newValue: score1)
+        socialImpactBar.updateBar(newValue: score2)
         self.view?.isMultipleTouchEnabled = true
         spawnBackground()
         displayTime()
@@ -101,10 +108,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if(currentlyGoing){
             let Image = UIImage(systemName: "pause.circle")
             let Texture = SKTexture(image: Image!)
+            Texture.filteringMode = .linear
             pauseButton = SKSpriteNode(texture: Texture)
         } else {
             let image = UIImage(systemName: "play.circle")
             let Texture = SKTexture(image: image!)
+            Texture.filteringMode = .linear
             pauseButton.removeFromParent()
             pauseButton = SKSpriteNode(texture: Texture)
         }
@@ -127,9 +136,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let nodeTouched = atPoint(location)
             print(nodeTouched)
             if nodeTouched.name == "constructionButton" {
-                SaveManager.saveGameState(scene: GameScene(size: self.view!.bounds.size))
+                SaveManager.saveGameState(scene: self)
                 timer.invalidate()
-                self.view?.presentScene(ConstructionScene(size: self.size), transition: SKTransition.fade(withDuration: 0.8))
+                self.view?.presentScene(ConstructionScene(budget: self.budget, size: self.size), transition: SKTransition.fade(withDuration: 0.8))
                 let seconds = 0.8
                 DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
                     self.removeAllChildren()
@@ -215,12 +224,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             if (cards[i].selected){
                 if (!cards[i].changedStats){
                     pollutionBar.updateBarAddition(addend: cards[i].pollutionStats)
-                    socialImpactBar.updateBarAddition(addend: cards[i].socialImpact)
+                    socialImpactBar.updateBarAddition(addend: -cards[i].socialImpact)
+                    score1 += cards[i].pollutionStats
+                    score2 -= cards[i].socialImpact
+                    budget -= cards[i].budget
+                    SaveManager.saveGameState(scene: self)
                     cards[i].changedStats = true
                 }
                 let buildingNode = SKSpriteNode(imageNamed: cards[i].spawningName)
                 buildingNode.position = cards[i].position
-                buildingNode.size = CGSize(width: 50, height: 50)
+                buildingNode.setScale(0.25)
                 addChild(buildingNode)
                 cards[i].spawned = true
             }
@@ -234,7 +247,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if (timeSinceRandomEvent < spawnRateRandomEvents || eventHappening) {
             return
         }
-        print("TEST")
+
         eventHappening = true
         blur = SKShapeNode(rectOf: CGSize(width: frame.midX*2, height: frame.midY*2))
         blur.alpha = CGFloat(0.8)
@@ -319,6 +332,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             events.remove(at: 0)
         }
     }
+    
+    func presentGameOverScreen() {
+            // Create an instance of the GameOverScene
+            let gameOverScene = GameOverScene(size: self.size)
+            // Set any properties on the GameOverScene as needed
+            // ...
+            // Present the GameOverScene
+            self.view?.presentScene(gameOverScene)
+        }
+    
+    
 }
     
 

@@ -4,14 +4,26 @@
 //
 //  Created by luke-the-coder on 10/04/23.
 //
-
+import UIKit
 import Foundation
 import SpriteKit
 import SwiftySKScrollView // Imported from https://github.com/crashoverride777/swifty-sk-scroll-view
 
 class ConstructionScene: SKScene, SKPhysicsContactDelegate {
-    var scrollView: SwiftySKScrollView?
+    let budgetLabel = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
     let moveableNode = SKNode()
+    var budget : Int
+    
+    init(budget: Int, size: CGSize) {
+        self.budget = budget
+        super.init(size: size)
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    var scrollView: SwiftySKScrollView?
     
     override func didMove(to view: SKView) {
         let backgroundNode = SKNode()
@@ -21,6 +33,13 @@ class ConstructionScene: SKScene, SKPhysicsContactDelegate {
         backgroundSprite.position = .zero
         backgroundSprite.zPosition = -100
         backgroundSprite.anchorPoint = .zero
+        
+        
+        budgetLabel.fontSize = 50
+        budgetLabel.fontColor = .white
+        budgetLabel.position = CGPoint(x: frame.width - 200, y: frame.height - 60)
+        addChild(budgetLabel)
+        
         
         backgroundNode.addChild(backgroundSprite)
         addChild(backgroundNode)
@@ -33,11 +52,15 @@ class ConstructionScene: SKScene, SKPhysicsContactDelegate {
         constructionButton.name = "constructionButton"
         constructionButton.position = CGPoint(x: constructionButton.size.width, y: frame.height - constructionButton.size.height)
         self.addChild(constructionButton)
-
+        
         setupHorizontalMenu()
         
     }
+    override func update(_ currentTime: TimeInterval) {
+        budgetLabel.text = "Budget: " + String(self.budget) + "M"
+    }
     
+    let alert = SKSpriteNode(imageNamed: "noFundsAlert")
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in (touches) {
             // Find the location of the touch:
@@ -45,18 +68,32 @@ class ConstructionScene: SKScene, SKPhysicsContactDelegate {
             // Locate the node at this location:
             let nodeTouched = atPoint(location)
             print(nodeTouched)
-
+            
             if nodeTouched.name == "constructionButton" {
                 // Player touched the start text or button node
                 // Switch to an instance of the GameScene:
-//                deleteScrollView(from: view!)
+                //                deleteScrollView(from: view!)
                 self.view?.presentScene(GameScene(size: self.size), transition: .fade(withDuration: 0.5))
+            } else if (nodeTouched.name == "alert") {
+                alert.removeFromParent()
             }
             for i in 0..<cards.count {
                 if (cards[i].name == nodeTouched.name){
-                    cards[i].selected = true
+                    if (self.budget >= cards[i].budget){
+                        self.budget -= cards[i].budget
+                        cards[i].selected = true
+                    } else {
+                        
+                        print("Insufficient budget")
+                        
+                        alert.position = CGPoint(x: frame.midX, y: frame.midY)
+                        alert.name = "alert"
+//                        alert.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+                        addChild(alert)
+                    }
                 }
             }
+           
         }
     }
     override func willMove(from view: SKView) {
@@ -64,10 +101,10 @@ class ConstructionScene: SKScene, SKPhysicsContactDelegate {
         scrollView = nil // nil out reference to deallocate properly
     }
     
-//    func deleteScrollView(from view: SKView) {
-//        scrollView?.removeFromSuperview()
-//        scrollView = nil // nil out reference to deallocate properly
-//    }
+    //    func deleteScrollView(from view: SKView) {
+    //        scrollView?.removeFromSuperview()
+    //        scrollView = nil // nil out reference to deallocate properly
+    //    }
     
     
     func setupHorizontalMenu(){
@@ -86,6 +123,6 @@ class ConstructionScene: SKScene, SKPhysicsContactDelegate {
         }
         
         addChild(moveableNode)
-
+        
     }
 }

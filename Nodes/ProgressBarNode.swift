@@ -32,16 +32,17 @@ class ProgressBar: SKNode {
     }
     
     func updateBar(newValue: CGFloat) {
+        var value = newValue
         if(newValue >= CGFloat(2)){
-            return
+            value = 2
         }
-        maskNode.xScale = newValue
+        maskNode.xScale = value
     }
     
     func updateBarAddition(addend: CGFloat) {
-        let newValue = addend + maskNode.xScale
+        var newValue = addend + maskNode.xScale
         if(newValue >= CGFloat(2)){
-            return
+            newValue = 2
         }
         maskNode.xScale = newValue
     }

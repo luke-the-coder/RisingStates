@@ -31,6 +31,7 @@ struct Card {
 
 
 var cards = [
-    Card(cardID: 1, name: "Nuclear Power Plant", imageName: "NuclearPowerPlant", type: .power, budget: 40, pollutionStats: 0.14, socialImpact: 0.84, description: "This is a nuclear power plant", position: CGPoint(x: 100, y: -50), selected: false, spawned: false, spawningName: "NuclearPlant2D", changedStats: false),
-    Card(cardID: 2, name: "Coal Power Plant", imageName: "CoalPowerPlant", type: .power, budget: 60, pollutionStats: 0.7, socialImpact: 0.4, description: "This is a coal power plant", position: CGPoint(x: -280, y: -150), selected: false, spawned: false, spawningName: "CoalPlant2D", changedStats: false)
+    Card(cardID: 1, name: "Nuclear Power Plant", imageName: "NuclearPowerPlant", type: .power, budget: 60, pollutionStats: 0.14, socialImpact: 0.84, description: "This is a nuclear power plant", position: CGPoint(x: 100, y: -50), selected: false, spawned: false, spawningName: "NuclearPlant2D", changedStats: false),
+    Card(cardID: 2, name: "Coal Power Plant", imageName: "CoalPowerPlant", type: .power, budget: 40, pollutionStats: 0.7, socialImpact: 0.4, description: "This is a coal power plant", position: CGPoint(x: -280, y: -150), selected: false, spawned: false, spawningName: "CoalPlant2D", changedStats: false),
+    Card(cardID: 2, name: "Solar arrays", imageName: "SolarArraysCard", type: .power, budget: 15, pollutionStats: 0.1, socialImpact: 0.3, description: "This is a huge solar panel field", position: CGPoint(x: -280, y: -230), selected: false, spawned: false, spawningName: "SolarArrays2D", changedStats: false)
 ]

@@ -28,4 +28,28 @@ class SaveManager {
 
         
     }
+    static func resetGameState() {
+        let defaults = UserDefaults.standard
+        defaults.removeObject(forKey: "time")
+        defaults.removeObject(forKey: "score1")
+        defaults.removeObject(forKey: "score2")
+        defaults.removeObject(forKey: "currentlyGoing")
+        defaults.removeObject(forKey: "budget")
+        defaults.synchronize()
+    }
+    
+    static func isSaveDataAvailable() -> Bool {
+        let defaults = UserDefaults.standard
+        if defaults.object(forKey: "time") == nil ||
+            defaults.object(forKey: "score1") == nil ||
+            defaults.object(forKey: "score2") == nil ||
+            defaults.object(forKey: "currentlyGoing") == nil ||
+            defaults.object(forKey: "budget") == nil {
+            return false
+        } else {
+            return true
+        }
+    }
+
+
 }
