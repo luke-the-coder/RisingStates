@@ -112,12 +112,12 @@ class ConstructionScene: SKScene, SKPhysicsContactDelegate {
         scrollView?.contentSize = CGSize(width: scrollView!.frame.width*3, height: scrollView!.frame.height) // * 3 makes it three times as wide
         view?.addSubview(scrollView!)
         scrollView?.setContentOffset(CGPoint(x: 0 + scrollView!.frame.width * 2, y: 0), animated: true)
-        moveableNode.position = CGPoint(x: 0, y: scrollView!.frame.height / 2)
+        moveableNode.position = CGPoint(x: 10, y: scrollView!.frame.height / 2)
         var i = -8
         for card in cards {
             let cardNode = SKSpriteNode(imageNamed: card.imageName)
             cardNode.name = card.name
-            cardNode.position = CGPoint(x: cardNode.size.width * CGFloat(i) , y: -60)
+            cardNode.position = CGPoint(x: cardNode.size.width * CGFloat(i), y: -60)
             i += 1
             moveableNode.addChild(cardNode)
         }

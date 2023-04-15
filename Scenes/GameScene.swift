@@ -14,13 +14,13 @@ import SwiftUI
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     var stateName : String = "ITALY"
-    var score1: CGFloat = 0.1
-    var score2: CGFloat = 2
+    var pollution: CGFloat = 1.4
+    var socialImpact: CGFloat = 2
     var budget : Int = 100
     var time: TimeInterval = 7
     var timer = Timer()
-    lazy var pollutionBar = ProgressBar(barSize: CGSize(width: 200, height: 20), progress: score1, imageName: "pollutionProgressBar", title: "Pollution: ")
-    lazy var socialImpactBar = ProgressBar(barSize: CGSize(width: 200, height: 20), progress: score2, imageName: "socialImpactProgessBar", title: "Social impact: ")
+    lazy var pollutionBar = ProgressBar(barSize: CGSize(width: 200, height: 20), progress: pollution, imageName: "pollutionProgressBar", title: "Pollution: ")
+    lazy var socialImpactBar = ProgressBar(barSize: CGSize(width: 200, height: 20), progress: socialImpact, imageName: "socialImpactProgessBar", title: "Social impact: ")
     
     var currentlyGoing : Bool = true
     let cam = SKCameraNode()
@@ -39,8 +39,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if(SaveManager.isSaveDataAvailable()){
             SaveManager.loadGameState(scene: self)
         }
-        pollutionBar.updateBar(newValue: score1)
-        socialImpactBar.updateBar(newValue: score2)
+        pollutionBar.updateBar(newValue: pollution)
+        socialImpactBar.updateBar(newValue: socialImpact)
         self.view?.isMultipleTouchEnabled = true
         spawnBackground()
         displayTime()
@@ -48,14 +48,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         self.camera = cam
         
-        
         pollutionBar.position = CGPoint(x: -frame.midX + pollutionBar.barSize.width - 20, y: frame.midY - pollutionBar.barSize.height/2 - 40)
         socialImpactBar.position = CGPoint(x: -frame.midX + socialImpactBar.barSize.width - 20, y: frame.midY - socialImpactBar.barSize.height/2 - 10)
         addChild(pollutionBar)
         addChild(socialImpactBar)
         
         pauseOrStop()
-        
         
         checkConstruction()
         if events.first(where: { $0.name == "Introduction" }) != nil {
@@ -157,13 +155,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     pauseButton.removeFromParent()
                     pauseOrStop()
                 }
-            }
-            else if nodeTouched.name == "readEvent" {
+            } else if nodeTouched.name == "readEvent" {
                 blur.removeAllChildren()
                 rectangle.removeAllChildren()
                 rectangle.removeFromParent()
                 blur.removeFromParent()
                 eventHappening = false
+            } else if nodeTouched.name == "restart" {
+                // Transition to a new version of the GameScene
+                // to restart the game:
+                self.removeAllChildren()
+                SaveManager.resetGameState()
+                self.view?.presentScene(
+                    GameScene(size: self.size),
+                    transition: .crossFade(withDuration: 1.5))
+            } else if nodeTouched.name == "returnToMenu" {
+                // Transition to the main menu scene:
+                self.view?.presentScene(
+                    MenuScene(size: self.size),
+                    transition: .crossFade(withDuration: 1.5))
             }
         }
     }
@@ -173,14 +183,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var isFirstUpdate = true
     override func update(_ currentTime: TimeInterval) {
-
+        
         if !isFirstUpdate {
             checkRandomEvent(currentTime - lastTime)
         } else {
             isFirstUpdate = false
         }
+        print(pollution)
+        checkGameOver()
         lastTime = currentTime
         
+    }
+    
+    func checkGameOver(){
+        if (pollution >= 2 || socialImpact <= 0){
+            presentGameOverScreen()
+        }
     }
     
     func displayBudget(){
@@ -217,16 +235,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         timer.tolerance = 0.1
         timer.fire()
     }
-
-
+    
+    
     func checkConstruction() {
         for i in 0..<cards.count {
             if (cards[i].selected){
                 if (!cards[i].changedStats){
                     pollutionBar.updateBarAddition(addend: cards[i].pollutionStats)
                     socialImpactBar.updateBarAddition(addend: -cards[i].socialImpact)
-                    score1 += cards[i].pollutionStats
-                    score2 -= cards[i].socialImpact
+                    pollution += cards[i].pollutionStats
+                    socialImpact -= cards[i].socialImpact
                     budget -= cards[i].budget
                     SaveManager.saveGameState(scene: self)
                     cards[i].changedStats = true
@@ -240,14 +258,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     func checkRandomEvent(_ frameRate:TimeInterval) {
-
+        
         // add time to timer
         timeSinceRandomEvent += frameRate
         // return if it hasn't been enough time to fire laser
         if (timeSinceRandomEvent < spawnRateRandomEvents || eventHappening) {
             return
         }
-
+        
         eventHappening = true
         blur = SKShapeNode(rectOf: CGSize(width: frame.midX*2, height: frame.midY*2))
         blur.alpha = CGFloat(0.8)
@@ -266,7 +284,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(rectangle)
         
         let configuration = UIImage.SymbolConfiguration(font: UIFont.systemFont(ofSize: 200))
-
+        
         let Image = UIImage(systemName: "checkmark.rectangle", withConfiguration: configuration)
         let Texture = SKTexture(image: Image!)
         Texture.filteringMode = .linear
@@ -334,16 +352,59 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func presentGameOverScreen() {
-            // Create an instance of the GameOverScene
-            let gameOverScene = GameOverScene(size: self.size)
-            // Set any properties on the GameOverScene as needed
-            // ...
-            // Present the GameOverScene
-            self.view?.presentScene(gameOverScene)
-        }
+        let blur = SKShapeNode(rectOf: CGSize(width: frame.midX*2, height: frame.midY*2))
+        blur.alpha = CGFloat(0.05)
+        blur.fillColor = .gray
+        blur.position = CGPoint(x: 0, y: 0)
+        blur.zPosition = 10
+        addChild(blur)
+        
+        let restartButton = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
+        restartButton.text = "Restart"
+        restartButton.name = "restart"
+        restartButton.fontSize = 60
+        restartButton.fontColor = .white
+        restartButton.position = CGPoint(x: 0, y: -80)
+        restartButton.zPosition = 1000
+        
+        let menuButton = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
+        menuButton.text = "Menu"
+        menuButton.name = "returnToMenu"
+        menuButton.fontSize = 60
+        menuButton.fontColor = .white
+        menuButton.position = CGPoint(x: 0, y: -160)
+        menuButton.zPosition = 1000
+        addChild(menuButton)
+        addChild(restartButton)
+        
+        // Create a label node for "Game Over" text
+        let gameOverLabel = SKLabelNode(text: "Game Over")
+        gameOverLabel.fontName = "GillSans-SemiBoldItalic"
+        gameOverLabel.fontSize = 72
+        gameOverLabel.position = CGPoint.zero
+        gameOverLabel.alpha = 0.0
+        gameOverLabel.zPosition = 11
+        addChild(gameOverLabel)
+        // Create a sequence of actions to animate the game over
+        let fadeIn = SKAction.fadeIn(withDuration: 0.5)
+        let wait = SKAction.wait(forDuration: 1.0)
+        let fadeOut = SKAction.fadeOut(withDuration: 0.5)
+        let remove = SKAction.removeFromParent()
+        let sequence = SKAction.sequence([fadeIn, wait, fadeOut, remove])
+        self.removeFromParent()
+        // Run the sequence on the game over label
+        gameOverLabel.run(sequence)
+        // Create an instance of the GameOverScene
+        //        let gameOverScene = GameOverScene(size: self.size)
+        // Set any properties on the GameOverScene as needed
+        // ...
+        // Present the GameOverScene
+        //        self.view?.presentScene(gameOverScene)
+        
+    }
     
     
 }
-    
+
 
 
