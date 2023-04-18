@@ -38,3 +38,10 @@ var cards = [
     Card(cardID: 5, name: "Oil Power Plant", imageName: "OilPowerPlantCard", type: .power, budget: 35, pollutionStats: 0.8, socialImpact: 0.4, description: "This is an oil power plant", position: CGPoint(x: -120, y: 160), selected: false, spawned: false, spawningName: "OilPowerPlantCard2D", changedStats: false),
        Card(cardID: 6, name: "Geothermal Power Plant", imageName: "GeothermalPowerPlantCard", type: .power, budget: 50, pollutionStats: 0.02, socialImpact: 0.2, description: "This is a geothermal power plant", position: CGPoint(x: 140, y: -420), selected: false, spawned: false, spawningName: "GeothermalPowerPlant2D", changedStats: false)
 ]
+
+func resetCards(){
+    for i in 0..<cards.count {
+        cards[i].selected = false
+        cards[i].spawned = false
+    }
+}

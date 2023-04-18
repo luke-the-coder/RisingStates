@@ -33,7 +33,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var timeSinceRandomEvent :  TimeInterval = 0
     var spawnRateRandomEvents : TimeInterval = 60
     var randomEvent = SKNode()
-    var blur = SKShapeNode(), rectangle = SKShapeNode()
+    var rectangle = SKShapeNode()
     
     override func didMove(to view: SKView) {
         if(SaveManager.isSaveDataAvailable()){
@@ -51,6 +51,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         pollutionBar.position = CGPoint(x: -frame.midX + pollutionBar.barSize.width - 20, y: frame.midY - pollutionBar.barSize.height/2 - 40)
         socialImpactBar.position = CGPoint(x: -frame.midX + socialImpactBar.barSize.width - 20, y: frame.midY - socialImpactBar.barSize.height/2 - 10)
         addChild(pollutionBar)
+        
         addChild(socialImpactBar)
         
         pauseOrStop()
@@ -134,13 +135,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let nodeTouched = atPoint(location)
             print(nodeTouched)
             if nodeTouched.name == "constructionButton" {
-                SaveManager.saveGameState(scene: self)
-                timer.invalidate()
-                self.view?.presentScene(ConstructionScene(budget: self.budget, size: self.size), transition: SKTransition.fade(withDuration: 0.8))
-                let seconds = 0.8
-                DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                    self.removeAllActions()
+                    self.enumerateChildNodes(withName: "*") { node, _ in
+                        node.removeFromParent()
+                    }
                     self.removeAllChildren()
                 }
+                SaveManager.saveGameState(scene: self)
+                timer.invalidate()
+                self.scene?.removeFromParent()
+                self.view?.presentScene(ConstructionScene(budget: self.budget, size: self.size), transition: SKTransition.fade(withDuration: 0.8))
+                
             }
             else if nodeTouched.name == "pauseButton" {
                 if(currentlyGoing){
@@ -162,59 +168,63 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 blur.removeFromParent()
                 eventHappening = false
             } else if nodeTouched.name == "restart" {
-                // Transition to a new version of the GameScene
-                // to restart the game:
-                self.removeAllChildren()
+                resetCards()
+                self.enumerateChildNodes(withName: "building") { node, _ in
+                    node.removeFromParent()
+                }
                 SaveManager.resetGameState()
-                self.view?.presentScene(
-                    GameScene(size: self.size),
-                    transition: .crossFade(withDuration: 1.5))
-            } else if nodeTouched.name == "returnToMenu" {
-                // Transition to the main menu scene:
-                self.view?.presentScene(
-                    MenuScene(size: self.size),
-                    transition: .crossFade(withDuration: 1.5))
+                gameOverOn = false
+                pollution = 0.1
+                socialImpact = 2
+                budget = 100
+                budgetLabel.removeFromParent()
+                survivedText.removeFromParent()
+                displayBudget()
+                pauseButton.removeFromParent()
+                pauseOrStop()
+                pollutionBar.updateBar(newValue: pollution)
+                socialImpactBar.updateBar(newValue: socialImpact)
+                removeGameOver()
             }
         }
     }
-    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {}
-    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {}
-    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {}
     
     var isFirstUpdate = true
+    var gameOverOn = false
     override func update(_ currentTime: TimeInterval) {
-        
         if !isFirstUpdate {
             checkRandomEvent(currentTime - lastTime)
         } else {
             isFirstUpdate = false
         }
-        print(pollution)
-        checkGameOver()
+        if (!gameOverOn){
+            checkGameOver()
+        }
         lastTime = currentTime
-        
     }
     
     func checkGameOver(){
         if (pollution >= 2 || socialImpact <= 0){
+            gameOverOn = true
             presentGameOverScreen()
         }
     }
-    
+    var budgetLabel = SKLabelNode( fontNamed: "GillSans-SemiBoldItalic")
     func displayBudget(){
-        let budgetLabel = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
         budgetLabel.fontSize = 20
         budgetLabel.fontColor = .black
         budgetLabel.position = CGPoint(x: frame.midX - 150, y: frame.midY - 30)
         addChild(budgetLabel)
         budgetLabel.text = "Budget: " + String(budget) + "M"
     }
+    
+    
     func displayTime() {
         timeLabel = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
         var timeOfDay: String {
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy/MM/dd"
-            let date = dateFormatter.date(from: "2023/04/13")!
+            let date = Date()
             let newDate = Calendar.current.date(byAdding: .day, value: Int(self.time), to: date)!
             return dateFormatter.string(from: newDate)
         }
@@ -236,7 +246,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         timer.fire()
     }
     
-    
+    var buildingNode = SKSpriteNode()
     func checkConstruction() {
         for i in 0..<cards.count {
             if (cards[i].selected){
@@ -246,12 +256,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     pollution += cards[i].pollutionStats
                     socialImpact -= cards[i].socialImpact
                     budget -= cards[i].budget
+                    budgetLabel.removeFromParent()
+                    displayBudget()
                     SaveManager.saveGameState(scene: self)
                     cards[i].changedStats = true
                 }
-                let buildingNode = SKSpriteNode(imageNamed: cards[i].spawningName)
+                buildingNode = SKSpriteNode(imageNamed: cards[i].spawningName)
                 buildingNode.position = cards[i].position
                 buildingNode.setScale(0.25)
+                buildingNode.name = "building"
                 addChild(buildingNode)
                 cards[i].spawned = true
             }
@@ -273,8 +286,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         blur.position = CGPoint(x: 0, y: 0)
         blur.zPosition = 10
         addChild(blur)
-        
-        
         
         // DO A RANDOM EVENT HERE
         rectangle = SKShapeNode(rectOf: CGSize(width: frame.width/2, height: frame.height/2))
@@ -307,8 +318,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             rectangle.addChild(eventNode)
             
         }
-        
-        
         timeSinceRandomEvent = 0
     }
     
@@ -319,8 +328,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         blur.position = CGPoint(x: 0, y: 0)
         blur.zPosition = 10
         addChild(blur)
-        
-        
         
         // DO A RANDOM EVENT HERE
         rectangle = SKShapeNode(rectOf: CGSize(width: frame.width/2, height: frame.height/2))
@@ -350,16 +357,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             events.remove(at: 0)
         }
     }
-    
+    var blur = SKShapeNode()
+    var restartButton = SKLabelNode()
+    var gameOverLabel = SKLabelNode()
+    var survivedText = SKLabelNode()
     func presentGameOverScreen() {
-        let blur = SKShapeNode(rectOf: CGSize(width: frame.midX*2, height: frame.midY*2))
-        blur.alpha = CGFloat(0.05)
+        blur = SKShapeNode(rectOf: CGSize(width: frame.midX*2, height: frame.midY*2))
+        blur.alpha = CGFloat(0.8)
         blur.fillColor = .gray
         blur.position = CGPoint(x: 0, y: 0)
         blur.zPosition = 10
         addChild(blur)
         
-        let restartButton = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
+        restartButton = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
         restartButton.text = "Restart"
         restartButton.name = "restart"
         restartButton.fontSize = 60
@@ -367,40 +377,56 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         restartButton.position = CGPoint(x: 0, y: -80)
         restartButton.zPosition = 1000
         
-        let menuButton = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
-        menuButton.text = "Menu"
-        menuButton.name = "returnToMenu"
-        menuButton.fontSize = 60
-        menuButton.fontColor = .white
-        menuButton.position = CGPoint(x: 0, y: -160)
-        menuButton.zPosition = 1000
-        addChild(menuButton)
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy/MM/dd"
+
+        // Convert the timeLabel text to a Date object
+        let timeLabelDate = dateFormatter.date(from: self.timeLabel.text!)!
+
+        // Get the current date
+        let currentDate = Date()
+
+        // Calculate the difference between the two dates in seconds
+        let timeSurvived = Int(currentDate.timeIntervalSince(timeLabelDate))
+
+        // Calculate the number of days that have passed
+        let daysSurvived = -Int(timeSurvived / (24 * 60 * 60))
+
+        // Format the result as desired
+        survivedText = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
+        survivedText.text = "You survived for \(daysSurvived) days"
+
+        survivedText.fontSize = 60
+        survivedText.fontColor = .white
+        survivedText.position = CGPoint(x: 0, y: -160)
+        survivedText.zPosition = 1000
+        addChild(survivedText)
         addChild(restartButton)
         
         // Create a label node for "Game Over" text
-        let gameOverLabel = SKLabelNode(text: "Game Over")
+        gameOverLabel = SKLabelNode(text: "Game Over")
         gameOverLabel.fontName = "GillSans-SemiBoldItalic"
         gameOverLabel.fontSize = 72
         gameOverLabel.position = CGPoint.zero
         gameOverLabel.alpha = 0.0
         gameOverLabel.zPosition = 11
         addChild(gameOverLabel)
-        // Create a sequence of actions to animate the game over
-        let fadeIn = SKAction.fadeIn(withDuration: 0.5)
-        let wait = SKAction.wait(forDuration: 1.0)
-        let fadeOut = SKAction.fadeOut(withDuration: 0.5)
-        let remove = SKAction.removeFromParent()
-        let sequence = SKAction.sequence([fadeIn, wait, fadeOut, remove])
-        self.removeFromParent()
-        // Run the sequence on the game over label
-        gameOverLabel.run(sequence)
-        // Create an instance of the GameOverScene
-        //        let gameOverScene = GameOverScene(size: self.size)
-        // Set any properties on the GameOverScene as needed
-        // ...
-        // Present the GameOverScene
-        //        self.view?.presentScene(gameOverScene)
         
+        // Create a sequence of actions to animate the game over
+        let fadeIn = SKAction.fadeIn(withDuration: 1)
+        let sequence = SKAction.sequence([fadeIn])
+        gameOverLabel.run(sequence)
+        restartButton.run(sequence)
+        
+        timer.invalidate()
+        
+  
+    }
+    
+    func removeGameOver(){
+        blur.removeFromParent()
+        restartButton.removeFromParent()
+        gameOverLabel.removeFromParent()
     }
     
     

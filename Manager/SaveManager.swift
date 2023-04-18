@@ -50,6 +50,11 @@ class SaveManager {
             return true
         }
     }
+    
+    static func saveBudget(budget: Int){
+        let defaults = UserDefaults.standard
+        defaults.set(budget, forKey: "budget")
+    }
 
 
 }

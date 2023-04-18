@@ -11,7 +11,8 @@ import SwiftySKScrollView // Imported from https://github.com/crashoverride777/s
 
 class ConstructionScene: SKScene, SKPhysicsContactDelegate {
     let budgetLabel = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
-    let moveableNode = SKNode()
+    var moveableNode = SKNode()
+
     var budget : Int
     
     init(budget: Int, size: CGSize) {
@@ -22,10 +23,15 @@ class ConstructionScene: SKScene, SKPhysicsContactDelegate {
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     var scrollView: SwiftySKScrollView?
     
     override func didMove(to view: SKView) {
+        moveableNode.removeFromParent()
+        moveableNode = SKNode()
+        
+        addChild(moveableNode)
+
         let backgroundNode = SKNode()
         
         let backgroundSprite = SKSpriteNode(imageNamed: "constructionScene")
@@ -53,7 +59,9 @@ class ConstructionScene: SKScene, SKPhysicsContactDelegate {
         constructionButton.position = CGPoint(x: constructionButton.size.width, y: frame.height - constructionButton.size.height)
         self.addChild(constructionButton)
         
-        setupHorizontalMenu()
+        if scrollView == nil {
+              setupHorizontalMenu()
+          }
         
     }
     override func update(_ currentTime: TimeInterval) {
@@ -73,6 +81,8 @@ class ConstructionScene: SKScene, SKPhysicsContactDelegate {
                 // Player touched the start text or button node
                 // Switch to an instance of the GameScene:
                 //                deleteScrollView(from: view!)
+//                self.removeAllActions()
+//                self.removeAllChildren()
                 self.view?.presentScene(GameScene(size: self.size), transition: .fade(withDuration: 0.5))
             } else if (nodeTouched.name == "alert") {
                 alert.removeFromParent()
@@ -96,18 +106,34 @@ class ConstructionScene: SKScene, SKPhysicsContactDelegate {
            
         }
     }
+//    override func willMove(from view: SKView) {
+//
+//        moveableNode.removeAllChildren()
+//        moveableNode.removeFromParent()
+//        self.removeAllActions()
+//        self.removeAllChildren()
+//        self.enumerateChildNodes(withName: "*") { node, _ in
+//                node.removeFromParent()
+//        }
+//        scrollView?.removeFromSuperview()
+////        scrollView = nil // nil out reference to deallocate properly
+//    }
     override func willMove(from view: SKView) {
         scrollView?.removeFromSuperview()
-        scrollView = nil // nil out reference to deallocate properly
+        scrollView = nil
+        moveableNode.removeAllChildren()
+        moveableNode.removeFromParent()
+        self.removeAllActions()
+        self.removeAllChildren()
+        self.enumerateChildNodes(withName: "*") { node, _ in
+            node.removeFromParent()
+        }
     }
-    
-    //    func deleteScrollView(from view: SKView) {
-    //        scrollView?.removeFromSuperview()
-    //        scrollView = nil // nil out reference to deallocate properly
-    //    }
+
     
     
     func setupHorizontalMenu(){
+        
         scrollView = SwiftySKScrollView(frame: CGRect(x: 0, y: 0, width: size.width, height: size.height), moveableNode: moveableNode, direction: .horizontal)
         scrollView?.contentSize = CGSize(width: scrollView!.frame.width*3, height: scrollView!.frame.height) // * 3 makes it three times as wide
         view?.addSubview(scrollView!)
@@ -122,7 +148,6 @@ class ConstructionScene: SKScene, SKPhysicsContactDelegate {
             moveableNode.addChild(cardNode)
         }
         
-        addChild(moveableNode)
         
     }
 }

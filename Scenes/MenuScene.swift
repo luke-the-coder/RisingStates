@@ -43,6 +43,8 @@ class MenuScene: SKScene {
             if nodeTouched.name == "startButton" {
                 // Player touched the start text or button node
                 // Switch to an instance of the GameScene:
+                SaveManager.resetGameState()
+                resetCards()
                 self.view?.presentScene(GameScene(size: self.size), transition: SKTransition.fade(withDuration: 1))
                 
             }
