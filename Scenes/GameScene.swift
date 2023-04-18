@@ -31,7 +31,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var eventHappening : Bool = false
     var lastTime:TimeInterval = 0.1
     var timeSinceRandomEvent :  TimeInterval = 0
-    var spawnRateRandomEvents : TimeInterval = 60
+    var spawnRateRandomEvents : TimeInterval = 30
     var randomEvent = SKNode()
     var rectangle = SKShapeNode()
     
@@ -133,7 +133,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let location = touch.location(in: self)
             // Locate the node at this location:
             let nodeTouched = atPoint(location)
-            print(nodeTouched)
             if nodeTouched.name == "constructionButton" {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
                     self.removeAllActions()
@@ -255,9 +254,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     socialImpactBar.updateBarAddition(addend: -cards[i].socialImpact)
                     pollution += cards[i].pollutionStats
                     socialImpact -= cards[i].socialImpact
-                    budget -= cards[i].budget
-                    budgetLabel.removeFromParent()
-                    displayBudget()
+                    updateBudget(addition: -cards[i].budget)
                     SaveManager.saveGameState(scene: self)
                     cards[i].changedStats = true
                 }
@@ -269,6 +266,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 cards[i].spawned = true
             }
         }
+    }
+    
+    func updateBudget(addition : Int){
+        budget += addition
+        budgetLabel.removeFromParent()
+        displayBudget()
     }
     func checkRandomEvent(_ frameRate:TimeInterval) {
         
@@ -316,7 +319,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             eventNode.zPosition = 11
             eventNode.size = CGSize(width: frame.width/2, height: frame.height/2)
             rectangle.addChild(eventNode)
-            
+            updateBudget(addition: event.budget)
+            pollutionBar.updateBarAddition(addend: event.pollutionStats)
+            socialImpactBar.updateBarAddition(addend: event.socialImpact)
+
         }
         timeSinceRandomEvent = 0
     }
