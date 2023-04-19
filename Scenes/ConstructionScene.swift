@@ -11,8 +11,7 @@ import SwiftySKScrollView // Imported from https://github.com/crashoverride777/s
 
 class ConstructionScene: SKScene {
     let budgetLabel = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
-    var moveableNode = SKNode()
-
+    let moveableNode = SKNode()
     var budget : Int
     
     init(budget: Int, size: CGSize) {
@@ -27,36 +26,30 @@ class ConstructionScene: SKScene {
     var scrollView: SwiftySKScrollView?
     
     override func didMove(to view: SKView) {
-        moveableNode.removeFromParent()
-        moveableNode = SKNode()
-        
+        addChild(SKAudioNode(fileNamed: "GameMusic.mp3"))
         addChild(moveableNode)
 
         let backgroundNode = SKNode()
-        
         let backgroundSprite = SKSpriteNode(imageNamed: "constructionScene")
         backgroundSprite.size = CGSize(width: frame.width, height: frame.height)
         backgroundSprite.position = .zero
         backgroundSprite.zPosition = -100
         backgroundSprite.anchorPoint = .zero
         
-        
         budgetLabel.fontSize = 50
         budgetLabel.fontColor = .white
         budgetLabel.position = CGPoint(x: frame.width - 200, y: frame.height - 60)
         addChild(budgetLabel)
         
-        
         backgroundNode.addChild(backgroundSprite)
         addChild(backgroundNode)
         let Image = UIImage(systemName: "arrowshape.turn.up.backward.circle")
         let Texture = SKTexture(image: Image!)
-        let constructionButton = SKSpriteNode(texture: Texture) // SKSpriteNode(imageNamed: "constructionButton")
+        let constructionButton = SKSpriteNode(texture: Texture)
         constructionButton.size = CGSize(width: 100, height: 100)
         constructionButton.name = "constructionButton"
         constructionButton.position = CGPoint(x: constructionButton.size.width, y: frame.height - constructionButton.size.height)
         self.addChild(constructionButton)
-        
         if scrollView == nil {
               setupHorizontalMenu()
           }
@@ -71,8 +64,6 @@ class ConstructionScene: SKScene {
         for touch in (touches) {
             let location = touch.location(in: self)
             let nodeTouched = atPoint(location)
-            print(nodeTouched)
-            
             if nodeTouched.name == "constructionButton" {
                 self.view?.presentScene(GameScene(size: self.size), transition: .fade(withDuration: 0.5))
             } else if (nodeTouched.name == "alert") {
@@ -82,18 +73,15 @@ class ConstructionScene: SKScene {
                 if (cards[i].name == nodeTouched.name){
                     if (self.budget >= cards[i].budget){
                         self.budget -= cards[i].budget
+                        cards[i].count += 1
                         cards[i].selected = true
                     } else {
-                        
-                        print("Insufficient budget")
-                        
                         alert.position = CGPoint(x: frame.midX, y: frame.midY)
                         alert.name = "alert"
                         addChild(alert)
                     }
                 }
             }
-           
         }
     }
 
@@ -110,17 +98,16 @@ class ConstructionScene: SKScene {
     }
     
     func setupHorizontalMenu(){
-        
         scrollView = SwiftySKScrollView(frame: CGRect(x: 0, y: 0, width: size.width, height: size.height), moveableNode: moveableNode, direction: .horizontal)
-        scrollView?.contentSize = CGSize(width: scrollView!.frame.width*3, height: scrollView!.frame.height) // * 3 makes it three times as wide
+        scrollView?.contentSize = CGSize(width: scrollView!.frame.width*3, height: scrollView!.frame.height)
         view?.addSubview(scrollView!)
-        scrollView?.setContentOffset(CGPoint(x: 0 + scrollView!.frame.width * 2, y: 0), animated: true)
-        moveableNode.position = CGPoint(x: 10, y: scrollView!.frame.height / 2)
+        scrollView?.setContentOffset(CGPoint(x: 110 + scrollView!.frame.width * 2, y: 0), animated: true)
+        moveableNode.position = CGPoint(x: 0, y: scrollView!.frame.height / 2)
         var i = -8
         for card in cards {
             let cardNode = SKSpriteNode(imageNamed: card.imageName)
             cardNode.name = card.name
-            cardNode.position = CGPoint(x: cardNode.size.width * CGFloat(i), y: -60)
+            cardNode.position = CGPoint(x: cardNode.size.width * CGFloat(i) + 15.0 * CGFloat(i), y: -60)
             i += 1
             moveableNode.addChild(cardNode)
         }

@@ -14,7 +14,7 @@ class GameScene: SKScene {
     let startButton = SKSpriteNode(imageNamed: "PlayButton")
     
     var stateName : String = "ITALY"
-    var pollution: CGFloat = 1.4
+    var pollution: CGFloat = 0.05
     var socialImpact: CGFloat = 2
     var budget : Int = 100
     var time: TimeInterval = 7
@@ -275,11 +275,11 @@ class GameScene: SKScene {
         for i in 0..<cards.count {
             if (cards[i].selected){
                 if (!cards[i].changedStats){
-                    pollutionBar.updateBarAddition(addend: cards[i].pollutionStats)
-                    socialImpactBar.updateBarAddition(addend: -cards[i].socialImpact)
-                    pollution += cards[i].pollutionStats
-                    socialImpact -= cards[i].socialImpact
-                    updateBudget(addition: -cards[i].budget)
+                    pollutionBar.updateBarAddition(addend: cards[i].pollutionStats * CGFloat(cards[i].count))
+                    socialImpactBar.updateBarAddition(addend: cards[i].socialImpact * CGFloat(cards[i].count))
+                    pollution += cards[i].pollutionStats * CGFloat(cards[i].count)
+                    socialImpact -= cards[i].socialImpact * CGFloat(cards[i].count)
+                    updateBudget(addition: -cards[i].budget * cards[i].count)
                     SaveManager.saveGameState(scene: self)
                     cards[i].changedStats = true
                 }
@@ -359,8 +359,9 @@ class GameScene: SKScene {
         rectangle.position = CGPoint(x: 0, y: 0)
         rectangle.zPosition = 11
         addChild(rectangle)
-        
-        let Image = UIImage(systemName: "checkmark.rectangle")
+        let configuration = UIImage.SymbolConfiguration(font: UIFont.systemFont(ofSize: 200))
+
+        let Image = UIImage(systemName: "checkmark.rectangle", withConfiguration: configuration)
         let Texture = SKTexture(image: Image!)
         Texture.filteringMode = .linear
         let confirmButton = SKSpriteNode(texture: Texture)
