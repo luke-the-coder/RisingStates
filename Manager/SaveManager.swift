@@ -13,8 +13,7 @@ class SaveManager {
         defaults.set(scene.socialImpact, forKey: "socialImpact")
         defaults.set(scene.currentlyGoing, forKey: "currentlyGoing")
         defaults.set(scene.budget, forKey: "budget")
-
-
+        defaults.set(scene.showingMenu, forKey: "showingMenu")
         defaults.synchronize()
     }
 
@@ -25,9 +24,9 @@ class SaveManager {
         scene.socialImpact = defaults.double(forKey: "socialImpact")
         scene.currentlyGoing = defaults.bool(forKey: "currentlyGoing")
         scene.budget = defaults.integer(forKey: "budget")
-
-        
+        scene.showingMenu = defaults.bool(forKey: "showingMenu")
     }
+    
     static func resetGameState() {
         let defaults = UserDefaults.standard
         defaults.removeObject(forKey: "time")

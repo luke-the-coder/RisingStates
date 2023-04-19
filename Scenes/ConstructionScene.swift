@@ -3,13 +3,13 @@
 //  
 //
 //  Created by luke-the-coder on 10/04/23.
-//
+
 import UIKit
 import Foundation
 import SpriteKit
 import SwiftySKScrollView // Imported from https://github.com/crashoverride777/swifty-sk-scroll-view
 
-class ConstructionScene: SKScene, SKPhysicsContactDelegate {
+class ConstructionScene: SKScene {
     let budgetLabel = SKLabelNode(fontNamed: "GillSans-SemiBoldItalic")
     var moveableNode = SKNode()
 
@@ -52,9 +52,7 @@ class ConstructionScene: SKScene, SKPhysicsContactDelegate {
         let Image = UIImage(systemName: "arrowshape.turn.up.backward.circle")
         let Texture = SKTexture(image: Image!)
         let constructionButton = SKSpriteNode(texture: Texture) // SKSpriteNode(imageNamed: "constructionButton")
-        // Build the construction button:
         constructionButton.size = CGSize(width: 100, height: 100)
-        // Name the start node for touch detection:
         constructionButton.name = "constructionButton"
         constructionButton.position = CGPoint(x: constructionButton.size.width, y: frame.height - constructionButton.size.height)
         self.addChild(constructionButton)
@@ -71,18 +69,11 @@ class ConstructionScene: SKScene, SKPhysicsContactDelegate {
     let alert = SKSpriteNode(imageNamed: "noFundsAlert")
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in (touches) {
-            // Find the location of the touch:
             let location = touch.location(in: self)
-            // Locate the node at this location:
             let nodeTouched = atPoint(location)
             print(nodeTouched)
             
             if nodeTouched.name == "constructionButton" {
-                // Player touched the start text or button node
-                // Switch to an instance of the GameScene:
-                //                deleteScrollView(from: view!)
-//                self.removeAllActions()
-//                self.removeAllChildren()
                 self.view?.presentScene(GameScene(size: self.size), transition: .fade(withDuration: 0.5))
             } else if (nodeTouched.name == "alert") {
                 alert.removeFromParent()
@@ -98,7 +89,6 @@ class ConstructionScene: SKScene, SKPhysicsContactDelegate {
                         
                         alert.position = CGPoint(x: frame.midX, y: frame.midY)
                         alert.name = "alert"
-//                        alert.anchorPoint = CGPoint(x: 0.5, y: 0.5)
                         addChild(alert)
                     }
                 }
@@ -106,18 +96,7 @@ class ConstructionScene: SKScene, SKPhysicsContactDelegate {
            
         }
     }
-//    override func willMove(from view: SKView) {
-//
-//        moveableNode.removeAllChildren()
-//        moveableNode.removeFromParent()
-//        self.removeAllActions()
-//        self.removeAllChildren()
-//        self.enumerateChildNodes(withName: "*") { node, _ in
-//                node.removeFromParent()
-//        }
-//        scrollView?.removeFromSuperview()
-////        scrollView = nil // nil out reference to deallocate properly
-//    }
+
     override func willMove(from view: SKView) {
         scrollView?.removeFromSuperview()
         scrollView = nil
@@ -129,8 +108,6 @@ class ConstructionScene: SKScene, SKPhysicsContactDelegate {
             node.removeFromParent()
         }
     }
-
-    
     
     func setupHorizontalMenu(){
         
@@ -147,7 +124,5 @@ class ConstructionScene: SKScene, SKPhysicsContactDelegate {
             i += 1
             moveableNode.addChild(cardNode)
         }
-        
-        
     }
 }

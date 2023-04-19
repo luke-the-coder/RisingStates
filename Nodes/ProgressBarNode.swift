@@ -48,7 +48,6 @@ class ProgressBar: SKNode {
     }
     
     private func createProgressBar(){
-        // Create the progress bar sprite node
         progressBar = SKSpriteNode(imageNamed: imageName)
         progressBar.size = self.barSize
         progressBar.position = CGPoint(x: 0, y: 0)
@@ -66,12 +65,8 @@ class ProgressBar: SKNode {
         progressBarLabel.horizontalAlignmentMode = .left
         progressBarLabel.verticalAlignmentMode = .center
         progressBarLabel.position = CGPoint(x: -frame.midX - 140 , y: 3)
+        
         self.addChild(progressBarLabel)
-
         self.addChild(cropNode)
-
     }
-    
-
-    
 }
